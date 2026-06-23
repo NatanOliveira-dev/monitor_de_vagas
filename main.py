@@ -2,10 +2,12 @@ import os
 import json
 import smtplib
 import requests
+import unicodedata
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from email.mime.text import MIMEText
+from urllib.parse import urljoin
 
 
 load_dotenv()
@@ -16,6 +18,12 @@ EMAIL_SENHA = os.getenv("EMAIL_SENHA")
 EMAIL_DESTINO = os.getenv("EMAIL_DESTINO")
 
 ARQUIVO_VAGAS = "vagas_encontradas.json"
+
+
+def normalizar_texto(texto):
+    texto = texto.lower()
+    texto = unicodedata.normalize("NFD", texto)
+    return "".join(letra for letra in texto if unicodedata.category(letra) != "Mn")
 
 
 def carregar_vagas_salvas():
@@ -63,7 +71,7 @@ def buscar_vagas():
 
     print("Site acessado com sucesso!")
 
-    soup = BeautifulSoup(resposta.text, "html.parser")
+    soup = BeautifulSoup(resposta.content, "html.parser")
     links = soup.find_all("a")
 
     vagas = []
@@ -72,10 +80,13 @@ def buscar_vagas():
         titulo = link.get_text(strip=True)
         url_vaga = link.get("href")
 
-        if "estágio" in titulo.lower():
+        if not titulo or not url_vaga:
+            continue
+
+        if "estagio" in normalizar_texto(titulo):
             vaga = {
                 "titulo": titulo,
-                "link": url_vaga
+                "link": urljoin(SITE_URL, url_vaga)
             }
 
             vagas.append(vaga)
@@ -102,7 +113,6 @@ def main():
             vagas_salvas.append(vaga)
 
     salvar_vagas(vagas_salvas)
-
     print("\nVerificação finalizada.")
 
 
