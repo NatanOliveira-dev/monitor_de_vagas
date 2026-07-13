@@ -1,4 +1,4 @@
-# Monitor de Vagas
+# Confere Vagas
 
 Projeto em Python para monitorar vagas de estágio em um site, identificar novas oportunidades e enviar um alerta por e-mail automaticamente.
 
